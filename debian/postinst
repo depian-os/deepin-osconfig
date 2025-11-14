@@ -1,0 +1,47 @@
+#!/bin/bash
+update_machine_id() {
+TARGET_IDS=(
+    "baaca734a76c4db1b4c2441558d843cb"
+    "225193f3c08a4e64abc60cdb6a751146"
+    "3194242a0f984d2fad175ac92d39f253"
+    "5d11faac50c94f2ea3e8df645fd52a7d"
+    "81947772bf9341c8a6e8a5cc0fdb2d23"
+)
+
+if [ -e /etc/machine-id ]
+then
+CURRENT_ID=$(cat /etc/machine-id 2>/dev/null)
+fi
+ 
+for ID in "${TARGET_IDS[@]}"; do
+    if [[ "$CURRENT_ID" == "$ID" ]]; then
+        echo "Match successful: machine-id is $ID"
+        if [ -e /var/lib/dbus/machine-id ]
+        then
+            rm -rf /var/lib/dbus/machine-id 
+        fi
+        if [ -e /etc/machine-id ]
+        then
+            rm -rf /etc/machine-id
+            systemd-machine-id-setup
+        fi
+        exit 0
+    fi
+done        
+}
+
+
+case "$1" in
+    configure)
+    update_machine_id
+    ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0
